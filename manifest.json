@@ -1,0 +1,18 @@
+{
+  "name": "HTMLGIS",
+  "short_name": "HTMLGIS",
+  "description": "Web GIS progresivo inspirado en QGIS",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#212529",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["map", "productivity", "utilities"]
+}

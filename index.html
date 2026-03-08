@@ -1,8 +1,10 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#212529">
+    <link rel="manifest" href="manifest.json">
     <title>HTMLGIS v14 (Mejorado)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
@@ -71,8 +73,8 @@
         /* MAP */
         #map { flex: 1; background: #e9ecef; width: 100%; height: 100%; }
 
-        /* FLOATING TOOLS */
-        #floating-tools { position: absolute; top: 80px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+        /* FLOATING TOOLS (mobile-first) */
+        #floating-tools { position: absolute; top: 68px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
         .tool-trigger {
             width: 42px; height: 42px; background: var(--bg-panel); border-radius: 50%; box-shadow: 0 4px 6px var(--shadow); border: 1px solid var(--border);
             display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 1.1rem; color: var(--text-main); transition: 0.2s;
@@ -126,6 +128,43 @@
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); } }
         #coords-display { position: absolute; bottom: 45px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.6); color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; pointer-events: none; }
         .leaflet-tooltip { background: rgba(255,255,255,0.9); border: 1px solid #333; color: black; font-weight: bold; font-size: 10px; padding: 1px 4px; }
+        #menu-digitize { width: 300px; max-height: calc(100vh - 180px); overflow-y: auto; }
+        #menu-digitize .row { display: flex; gap: 6px; margin: 8px 10px; align-items: center; flex-wrap: wrap; }
+        #menu-digitize .btn-mini {
+            border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-main);
+            border-radius: 5px; padding: 5px 8px; cursor: pointer; font-size: 0.78rem;
+        }
+        #menu-digitize .btn-mini:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        #menu-digitize .btn-mini.active { background: #198754; color: white; border-color: #198754; }
+        #menu-digitize .meta { font-size: 0.74rem; color: var(--text-muted); margin: 6px 10px; }
+        #menu-digitize input[type="number"] { width: 90px; padding: 5px; font-size: 0.78rem; }
+        #menu-digitize .qa-items {
+            max-height: 110px; overflow: auto; border: 1px solid var(--border);
+            border-radius: 6px; padding: 6px; background: var(--input-bg);
+            margin: 6px 10px;
+        }
+        #menu-digitize .qa-item { font-size: 0.72rem; line-height: 1.25; margin-bottom: 4px; }
+        #menu-digitize .qa-item:last-child { margin-bottom: 0; }
+        #menu-digitize .qa-ok { color: #198754; }
+        #menu-digitize .qa-warning { color: #fd7e14; }
+        #menu-digitize .qa-error { color: #dc3545; }
+        #status-badges {
+            position: absolute; top: 60px; left: 10px; z-index: 1000;
+            display: flex; flex-direction: column; gap: 5px; pointer-events: none;
+            max-width: 60%;
+        }
+        #status-badges .badge {
+            background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        #selection-badge { color: #ffc107; }
+        @media(min-width: 768px) {
+            #floating-tools {
+                top: 80px; bottom: auto; right: 10px;
+            }
+            #coords-display { bottom: 45px; }
+            #status-badges { top: auto; bottom: 55px; max-width: 55%; }
+        }
 
         /* NEW: Modal for Geoprocessing */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: none; justify-content: center; align-items: center; }
@@ -139,10 +178,10 @@
     <div id="loader"><i class="fas fa-microchip fa-spin fa-3x" style="margin-bottom:15px"></i><span>Procesando...</span></div>
 
     <div id="header">
-        <div class="brand"><i class="fas fa-globe-europe"></i> HTMLGIS <span style="font-size:0.7em; opacity:0.6; margin-left:5px">v14 Mejorado</span></div>
+        <div class="brand"><i class="fas fa-globe-europe"></i> HTMLGIS <span style="font-size:0.7em; opacity:0.6; margin-left:5px">v14 Mejorado · desarrollado por Javier L.</span></div>
         <div style="display:flex; gap:15px;">
-            <i class="fas fa-adjust icon-btn" onclick="toggleDarkMode()" title="Tema"></i>
-            <i class="fas fa-bars icon-btn" onclick="toggleSidebar()" title="Menú"></i>
+            <i class="fas fa-adjust icon-btn" data-action="toggle-dark-mode" title="Tema"></i>
+            <i class="fas fa-bars icon-btn" data-action="toggle-sidebar" title="Menú"></i>
         </div>
     </div>
 
@@ -151,20 +190,38 @@
         <div id="sidebar">
             <div class="sidebar-content">
                 <div class="sec-title">Proyecto</div>
-                <button class="btn-block" onclick="document.getElementById('fileInput').click()"><i class="fas fa-upload"></i> Cargar Archivo</button>
+                <button class="btn-block" data-action="open-file-input"><i class="fas fa-upload"></i> Cargar Archivo</button>
                 <input type="file" id="fileInput" accept=".zip,.kml,.gpx,.json,.geojson" hidden>
+                <button class="btn-block btn-outline" id="btn-save-project"><i class="fas fa-floppy-disk"></i> Guardar Proyecto</button>
+                <button class="btn-block btn-outline" id="btn-open-project"><i class="fas fa-folder-open"></i> Abrir Proyecto</button>
+                <input type="file" id="projectFileInput" accept=".htmlgis.json,application/json" hidden>
+                <div style="margin:8px 0;">
+                    <label for="project-crs" style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">CRS del proyecto</label>
+                    <select id="project-crs" data-action="project-set-crs">
+                        <option value="EPSG:4326">EPSG:4326</option>
+                        <option value="EPSG:3857">EPSG:3857</option>
+                        <option value="EPSG:25830">EPSG:25830</option>
+                        <option value="EPSG:23030">EPSG:23030</option>
+                    </select>
+                </div>
+                <div style="margin:8px 0;">
+                    <label style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+                        <input type="checkbox" id="project-multi-crs" data-action="project-toggle-multi-crs">
+                        Edición multi-CRS (experimental)
+                    </label>
+                </div>
 
-                <button class="btn-block btn-outline" onclick="createEmptyLayer()"><i class="fas fa-plus"></i> Crear Capa Vacía</button>
+                <button class="btn-block btn-outline" data-action="create-empty-layer"><i class="fas fa-plus"></i> Crear Capa vacía</button>
 
                 <div class="sec-title">Datos OSM</div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                    <button class="btn-block btn-outline" onclick="fetchOSM('building')"><i class="fas fa-building"></i> Edificios</button>
-                    <button class="btn-block btn-outline" onclick="fetchOSM('highway')"><i class="fas fa-road"></i> Vías</button>
+                    <button class="btn-block btn-outline" data-action="fetch-osm" data-osm="building"><i class="fas fa-building"></i> Edificios</button>
+                    <button class="btn-block btn-outline" data-action="fetch-osm" data-osm="highway"><i class="fas fa-road"></i> Vías</button>
                 </div>
 
                 <div class="sec-title">Capas (<span id="layer-count">0</span>)</div>
                 <div id="filter-container" style="display:none; margin-bottom:10px;">
-                    <input type="text" id="layer-filter" placeholder="🔍 Filtrar..." onkeyup="filterActiveLayer(this.value)">
+                    <input type="text" id="layer-filter" placeholder="Filtrar...">
                 </div>
                 <div id="layer-list"></div>
             </div>
@@ -172,740 +229,198 @@
 
         <div id="map"></div>
         <div id="coords-display">Lat: 0.0000 | Lon: 0.0000</div>
-
-        <div style="position: absolute; bottom: 55px; left: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 5px; pointer-events: none;">
-            <div id="active-layer-badge" style="background:rgba(0,0,0,0.7); color:white; padding:5px 10px; border-radius:4px; font-size:0.8rem;">Capa: Ninguna</div>
-            <div id="selection-badge" style="display:none; background:rgba(0,0,0,0.7); color:#ffc107; padding:5px 10px; border-radius:4px; font-size:0.8rem;">Selección Activa</div>
+        <div id="status-badges">
+            <div id="active-layer-badge" class="badge">Capa: Ninguna</div>
+            <div id="selection-badge" class="badge" style="display:none;">Selección Activa</div>
+            <div id="project-crs-badge" class="badge">Proyecto CRS: EPSG:4326</div>
+            <div id="project-multi-crs-badge" class="badge">Multi-CRS: OFF</div>
         </div>
 
         <div id="floating-tools">
             <div class="tool-group">
-                <div class="tool-trigger" onclick="toggleMenu('menu-utils')"><i class="fas fa-sliders-h"></i></div>
+                <div class="tool-trigger" id="tool-trigger-utils" data-action="toggle-menu" data-menu="menu-utils"><i class="fas fa-sliders-h"></i></div>
                 <div class="tool-menu" id="menu-utils">
                     <div class="menu-head">Utilidades</div>
-                    <div class="menu-item" onclick="saveActiveLayer()"><i class="fas fa-save"></i> Guardar Capa</div>
-                    <div class="menu-item" onclick="toggleIdentify()"><i class="fas fa-info-circle"></i> Identificador</div>
-                    <div class="menu-item" onclick="toggleSelectMode()"><i class="fas fa-mouse-pointer"></i> Modo Selección</div>
-                    <div class="menu-item" onclick="locateUser()"><i class="fas fa-crosshairs"></i> GPS</div>
-                    <div class="menu-item" onclick="toggleMoveRotate()"><i class="fas fa-arrows-alt"></i> Mover/Rotar Capa</div> </div>
+                    <div class="menu-item" data-action="save-active-layer"><i class="fas fa-save"></i> Guardar Capa</div>
+                    <div class="menu-item" data-action="toggle-identify"><i class="fas fa-info-circle"></i> Identificador</div>
+                    <div class="menu-item" data-action="toggle-select"><i class="fas fa-mouse-pointer"></i> Modo Selección</div>
+                    <div class="menu-item" data-action="select-area"><i class="fas fa-vector-square"></i> Selección por Área</div>
+                    <div class="menu-item" data-action="select-lasso"><i class="fas fa-draw-polygon"></i> Selección Lazo</div>
+                    <div class="menu-item" style="display:block;">
+                        <div style="font-size:0.75rem; opacity:0.8; margin-bottom:4px;">Tolerancia selección (px)</div>
+                        <input type="number" id="selection-tolerance" min="2" max="40" step="1" value="12" data-action="set-selection-tolerance">
+                    </div>
+                    <div class="menu-item" data-action="configure-shortcuts"><i class="fas fa-keyboard"></i> Configurar Atajos</div>
+                    <div class="menu-item" data-action="locate-user"><i class="fas fa-crosshairs"></i> GPS</div>
+                    <div class="menu-item" data-action="toggle-move-rotate"><i class="fas fa-arrows-alt"></i> Mover/Rotar Capa</div> </div>
             </div>
             <div class="tool-group">
-                <div class="tool-trigger" onclick="toggleMenu('menu-edit')"><i class="fas fa-vector-square"></i></div>
+                <div class="tool-trigger" data-action="toggle-menu" data-menu="menu-edit"><i class="fas fa-vector-square"></i></div>
                 <div class="tool-menu" id="menu-edit">
                     <div class="menu-head">Edición</div>
-                    <div class="menu-item" onclick="runAdvanced('merge')"><i class="fas fa-object-group"></i> Merge (Unir Sel)</div>
-                    <div class="menu-item" onclick="runAdvanced('explode')"><i class="fas fa-th"></i> Explotar</div>
-                    <div class="menu-item" onclick="runAdvanced('clean')"><i class="fas fa-eraser"></i> Limpiar Selección</div>
+                    <div class="menu-item" data-action="run-advanced" data-tool="merge"><i class="fas fa-object-group"></i> Merge (Unir Sel)</div>
+                    <div class="menu-item" data-action="run-advanced" data-tool="explode"><i class="fas fa-th"></i> Explotar</div>
+                    <div class="menu-item" data-action="run-advanced" data-tool="clean"><i class="fas fa-eraser"></i> Limpiar Selección</div>
+                    <div class="menu-item" data-action="delete-selected"><i class="fas fa-trash"></i> Borrar Selección</div>
                 </div>
             </div>
             <div class="tool-group">
-                <div class="tool-trigger" onclick="toggleMenu('menu-gis')"><i class="fas fa-chart-area"></i></div>
+                <div class="tool-trigger" data-action="toggle-menu" data-menu="menu-gis"><i class="fas fa-chart-area"></i></div>
                 <div class="tool-menu" id="menu-gis">
                     <div class="menu-head">Medición</div>
-                    <div class="menu-item" onclick="calcMetrics('area')"><i class="fas fa-ruler-combined"></i> Calc. Área</div>
-                    <div class="menu-item" onclick="calcMetrics('length')"><i class="fas fa-ruler-horizontal"></i> Calc. Longitud</div>
+                    <div class="menu-item" data-action="calc-metrics" data-tool="area"><i class="fas fa-ruler-combined"></i> Calc. Área</div>
+                    <div class="menu-item" data-action="calc-metrics" data-tool="length"><i class="fas fa-ruler-horizontal"></i> Calc. Longitud</div>
                     <div class="menu-head">Geoprocesos</div>
-                    <div class="menu-item" onclick="openProcessModal('buffer')"><i class="far fa-circle"></i> Buffer (Config)</div> <div class="menu-item" onclick="openProcessModal('union')"><i class="fas fa-layer-group"></i> Disolver (Config)</div> <div class="menu-item" onclick="openProcessModal('intersect')"><i class="fas fa-intersection"></i> Intersección (2 Capas)</div> <div class="menu-item" onclick="openProcessModal('difference')"><i class="fas fa-minus-circle"></i> Diferencia (2 Capas)</div> <div class="menu-item" onclick="runGIS('hull')"><i class="fas fa-draw-polygon"></i> Convex Hull</div>
-                    <div class="menu-item" onclick="runGIS('centroid')"><i class="fas fa-dot-circle"></i> Centroides</div>
-                    <div class="menu-item" onclick="runGIS('centerofmass')"><i class="fas fa-weight-hanging"></i> Centro de Masa</div> <div class="menu-item" onclick="runGIS('kmeans')"><i class="fas fa-bubbles"></i> K-Means (5)</div>
-                    <div class="menu-item" onclick="runGIS('voronoi')"><i class="fas fa-project-diagram"></i> Voronoi</div>
-                    <div class="menu-item" onclick="runGIS('tin')"><i class="fas fa-network-wired"></i> TIN</div>
+                    <div class="menu-item" data-action="open-process" data-tool="buffer"><i class="far fa-circle"></i> Buffer (Config)</div>
+                    <div class="menu-item" data-action="open-process" data-tool="union"><i class="fas fa-layer-group"></i> Disolver (Config)</div>
+                    <div class="menu-item" data-action="open-process" data-tool="intersect"><i class="fas fa-intersection"></i> Intersección (2 Capas)</div>
+                    <div class="menu-item" data-action="open-process" data-tool="difference"><i class="fas fa-minus-circle"></i> Diferencia (2 Capas)</div>
+                    <div class="menu-item" data-action="open-process" data-tool="clip"><i class="fas fa-crop-alt"></i> Clip (2 Capas)</div>
+                    <div class="menu-item" data-action="open-process" data-tool="spatialjoin"><i class="fas fa-link"></i> Spatial Join (2 Capas)</div>
+                    <div class="menu-item" data-action="open-process" data-tool="nearestneighbor"><i class="fas fa-map-marker-alt"></i> Nearest Neighbor (2 Capas)</div>
+                    <div class="menu-item" data-action="open-process" data-tool="simplify"><i class="fas fa-wave-square"></i> Simplify (Config)</div>
+                    <div class="menu-item" data-action="open-process" data-tool="repair"><i class="fas fa-wrench"></i> Repair Geometry (Config)</div>
+                    <div class="menu-item" data-action="run-gis" data-tool="hull"><i class="fas fa-draw-polygon"></i> Convex Hull</div>
+                    <div class="menu-item" data-action="run-gis" data-tool="centroid"><i class="fas fa-dot-circle"></i> Centroides</div>
+                    <div class="menu-item" data-action="run-gis" data-tool="centerofmass"><i class="fas fa-weight-hanging"></i> Centro de Masa</div>
+                    <div class="menu-item" data-action="run-gis" data-tool="kmeans"><i class="fas fa-bubbles"></i> K-Means (5)</div>
+                    <div class="menu-item" data-action="run-gis" data-tool="voronoi"><i class="fas fa-project-diagram"></i> Voronoi</div>
+                    <div class="menu-item" data-action="run-gis" data-tool="tin"><i class="fas fa-network-wired"></i> TIN</div>
+                </div>
+            </div>
+            <div class="tool-group">
+                <div class="tool-trigger" data-action="toggle-menu" data-menu="menu-digitize"><i class="fas fa-draw-polygon"></i></div>
+                <div class="tool-menu" id="menu-digitize">
+                    <div class="menu-head">Digitalización</div>
+                    <div class="row">
+                        <button class="btn-mini" data-action="digitize-start" data-mode="point">Punto</button>
+                        <button class="btn-mini" data-action="digitize-start" data-mode="line">Línea</button>
+                        <button class="btn-mini" data-action="digitize-start" data-mode="polygon">Polígono</button>
+                        <button class="btn-mini" data-action="digitize-stop">Stop</button>
+                    </div>
+                    <div class="row">
+                        <label><input type="checkbox" id="digitize-snap" checked data-action="digitize-snap"> Snap</label>
+                        <label>Tolerancia</label>
+                        <input type="number" id="digitize-tolerance" min="1" step="1" value="20" data-action="digitize-tolerance">
+                    </div>
+                    <div class="row">
+                        <label>Gap m2</label>
+                        <input type="number" id="digitize-gap-threshold" min="0" step="0.1" value="5">
+                        <button class="btn-mini" data-action="qa-clear">Limpiar QA</button>
+                    </div>
+                    <div class="row">
+                        <label><input type="checkbox" id="digitize-ortho" data-action="digitize-ortho"> Ortogonal</label>
+                        <label><input type="checkbox" id="digitize-parallel" data-action="digitize-parallel"> Paralelo</label>
+                    </div>
+                    <div class="row">
+                        <label>CAD m</label>
+                        <input type="number" id="cad-adjust-m" min="0.1" step="0.1" value="5">
+                        <button class="btn-mini" data-action="cad-trim">Trim</button>
+                        <button class="btn-mini" data-action="cad-extend">Extend</button>
+                    </div>
+                    <div class="row">
+                        <button class="btn-mini" data-action="edit-history-clear">Limpiar Hist</button>
+                        <button class="btn-mini" data-action="edit-undo">Undo</button>
+                        <button class="btn-mini" data-action="edit-redo">Redo</button>
+                    </div>
+                    <div class="meta" id="digitize-mode">Modo: ninguno</div>
+                    <div class="meta" id="digitize-metrics">Métricas: -</div>
+                    <div class="meta" id="digitize-cad-status">CAD: ortogonal off</div>
+                    <div class="meta" id="qa-summary">QA: sin registros</div>
+                    <div id="qa-items" class="qa-items"></div>
+                    <div class="meta" id="edit-history-summary">Historial: 0 eventos</div>
+                    <div class="meta" id="edit-undo-summary">Undo: 0 | Redo: 0</div>
+                    <div id="edit-history-items" class="qa-items"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="table-panel">
-        <div class="table-bar" onclick="toggleTable()">
+        <div class="table-bar" data-action="toggle-table">
             <span><i class="fas fa-table"></i> Tabla de Atributos</span>
             <i class="fas fa-chevron-up" id="table-icon"></i>
         </div>
         <div class="table-tools">
-            <button class="table-btn" onclick="addNewField()"><i class="fas fa-plus"></i> Campo</button>
-            <button class="table-btn" onclick="openCalculator()"><i class="fas fa-calculator"></i> Calculadora</button>
+            <button class="table-btn" data-action="add-new-field"><i class="fas fa-plus"></i> Campo</button>
+            <button class="table-btn" data-action="open-calculator"><i class="fas fa-calculator"></i> Calculadora</button>
+            <select id="table-filter-field" style="max-width:160px;">
+                <option value="">Campo...</option>
+            </select>
+            <select id="table-filter-op" style="max-width:120px;">
+                <option value="contains">contiene</option>
+                <option value="eq">igual</option>
+                <option value="gt">></option>
+                <option value="lt"><</option>
+            </select>
+            <input type="text" id="table-filter-value" placeholder="Filtro tabla..." style="max-width:180px;">
+            <button class="table-btn" data-action="table-filter-apply"><i class="fas fa-filter"></i> Filtrar</button>
+            <button class="table-btn" data-action="table-filter-clear"><i class="fas fa-eraser"></i> Limpiar</button>
         </div>
         <div class="table-wrap">
             <table id="attr-table"><thead></thead><tbody></tbody></table>
         </div>
     </div>
 
-    <div id="process-modal" class="modal-overlay" onclick="if(event.target.id=='process-modal')closeProcessModal()">
+    <div id="process-modal" class="modal-overlay">
         <div class="modal-content">
             <h3 id="modal-title">Herramienta GIS</h3>
             <div id="modal-form">
                 </div>
-            <button class="btn-block" onclick="executeProcess()"><i class="fas fa-play"></i> Ejecutar</button>
-            <button class="btn-block btn-outline" onclick="closeProcessModal()">Cancelar</button>
+            <button class="btn-block" data-action="execute-process"><i class="fas fa-play"></i> Ejecutar</button>
+            <button class="btn-block btn-outline" data-action="close-process-modal">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="capture-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Atributos de Captura</h3>
+            <div id="capture-form-body"></div>
+            <button class="btn-block" id="capture-save-btn"><i class="fas fa-check"></i> Guardar Feature</button>
+            <button class="btn-block btn-outline" id="capture-cancel-btn">Cancelar</button>
+        </div>
+    </div>
+    <div id="shortcuts-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Atajos de Teclado</h3>
+            <div class="form-group"><label for="shortcut-select">Seleccionar</label><input id="shortcut-select" type="text" maxlength="20" placeholder="s"></div>
+            <div class="form-group"><label for="shortcut-clear">Limpiar selección</label><input id="shortcut-clear" type="text" maxlength="20" placeholder="d"></div>
+            <div class="form-group"><label for="shortcut-cut">Partir/Cut</label><input id="shortcut-cut" type="text" maxlength="20" placeholder="c"></div>
+            <div class="form-group"><label for="shortcut-area">Selección área</label><input id="shortcut-area" type="text" maxlength="20" placeholder="a"></div>
+            <div class="form-group"><label for="shortcut-lasso">Selección lazo</label><input id="shortcut-lasso" type="text" maxlength="20" placeholder="q"></div>
+            <div class="form-group"><label for="shortcut-delete">Borrar selección</label><input id="shortcut-delete" type="text" maxlength="20" placeholder="delete"></div>
+            <div id="shortcuts-conflict" style="font-size:0.85rem; color:#dc3545; min-height:1.2em; margin-bottom:10px;"></div>
+            <button class="btn-block" data-action="shortcuts-save"><i class="fas fa-check"></i> Guardar</button>
+            <button class="btn-block btn-outline" data-action="shortcuts-reset"><i class="fas fa-rotate-left"></i> Restablecer</button>
+            <button class="btn-block btn-outline" data-action="shortcuts-close">Cerrar</button>
         </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
     <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.10.0/proj4.js"></script>
     <script src="https://unpkg.com/osmtogeojson@3.0.0-beta.5/osmtogeojson.js"></script>
     <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
 
-    <script>
-        const map = L.map('map', { preferCanvas: true, maxZoom: 22 }).setView([40.416, -3.703], 6);
-        L.control.scale({ imperial: false }).addTo(map);
-
-        const bases = {
-            "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22 }),
-            "Carto Dark": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 22 }),
-            "PNOA Sat": L.tileLayer.wms('http://www.ign.es/wms-inspire/pnoa-ma?', { layers: 'OI.OrthoimageCoverage', format: 'image/png', transparent: true }),
-            "Esri Sat": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
-        };
-        bases["OpenStreetMap"].addTo(map);
-        L.control.layers(bases, null, { position: 'topright' }).addTo(map);
-
-        map.pm.addControls({ position: 'topleft', drawCircle:false, rotateMode:true, cutPolygon:true });
-        map.pm.setGlobalOptions({ snappable:true, snapDistance:20 });
-        map.on('mousemove', e => document.getElementById('coords-display').innerText = `Lat: ${e.latlng.lat.toFixed(5)} | Lon: ${e.latlng.lng.toFixed(5)}`);
-
-        let layers = [];
-        let activeId = null;
-        let modes = { select: false, identify: false, moveRotate: false }; // ADDED moveRotate mode
-        let currentProcess = { tool: null, options: {} }; // NEW: For Geoprocess Modal
-
-        const loader = (s) => document.getElementById('loader').style.display = s ? 'flex' : 'none';
-        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-
-        // NEW: Enhanced Sidebar Toggle
-        function toggleSidebar() {
-             const sb = document.getElementById('sidebar');
-            const body = document.body;
-                       // Check current width for mobile behavior
-            if (window.innerWidth < 768) {
-                sb.classList.toggle('open');
-            } else {
-                // Desktop behavior: toggle class on body to shift layout
-                body.classList.toggle('sidebar-open');
-            }
-        }
-
-        function toggleMenu(id) {
-             document.querySelectorAll('.tool-menu').forEach(el=>el.id!==id?el.classList.remove('show'):null);
-            document.getElementById(id).classList.toggle('show');
-        }
-        function toggleTable() {
-             const p=document.getElementById('table-panel'); p.classList.toggle('open');
-            document.getElementById('table-icon').className = p.classList.contains('open') ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
-        }
-
-        // MODIFIED: Integration with Geoman drawing
-        map.on('pm:create', (e) => {
-            const activeLayer = layers.find(x => x.id === activeId);
-            if (!activeLayer) return;
-
-            const newFeature = e.layer.toGeoJSON();
-            // 1. Unify feature properties
-            if (!newFeature.properties) newFeature.properties = {};
-            // 2. Assign unique ID
-            newFeature.properties._uid = activeId + '_' + Date.now() + Math.floor(Math.random() * 1000);
-            
-            // 3. Set default properties based on the first feature of the layer
-            const existingProps = activeLayer.geojson.features.length > 0 ? Object.keys(activeLayer.geojson.features[0].properties) : [];
-            existingProps.filter(k => k !== '_uid').forEach(k => {
-                if (newFeature.properties[k] === undefined) newFeature.properties[k] = null;
-            });
-
-            // 4. Add to the layer's GeoJSON structure
-            activeLayer.geojson.features.push(newFeature);
-
-            // 5. Recreate the Leaflet layer from GeoJSON
-            refreshLayerFeatures(activeLayer);
-            
-            // 6. Disable drawing after creation (UX improvement)
-            map.pm.disableDraw(e.shape);
-        });
-        
-        // NEW: Helper function to refresh leaflet layer data
-        function refreshLayerFeatures(layerObj) {
-            map.removeLayer(layerObj.leafletL);
-            const newLeafletL = layerObj.createLayerFn(layerObj.geojson);
-            newLeafletL.addTo(map);
-            layerObj.leafletL = newLeafletL;
-            renderTable(); // Refresh table to show new features
-        }
-
-
-        function registerLayer(geojson, name) {
-            const id = 'L' + Date.now() + Math.floor(Math.random()*1000);
-            const color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'); // Fix color generation
-            let i=0; geojson.features.forEach(f=>{ if(!f.properties)f.properties={}; f.properties._uid=id+'_'+(i++); });
-
-            const createLeafletLayer = (data) => {
-                return L.geoJSON(data, {
-                    style: (f) => {
-                        const l = layers.find(x => x.id === id);
-                        const isSel = l && l.selectedIds.includes(f.properties._uid);
-                        let fColor = l ? l.color : color;
-                        if (l && l.symbology && l.symbology.field && l.symbology.map[f.properties[l.symbology.field]]) fColor = l.symbology.map[f.properties[l.symbology.field]];
-                        // Apply active color only if activeId matches the layer being drawn
-                        return { color: isSel ? '#ffc107' : fColor, weight: isSel?3:2, fillOpacity: l ? l.opacity : 0.4 };
-                    },
-                    pointToLayer: (f, latlng) => {
-                        const l = layers.find(x => x.id === id);
-                        const isSel = l && l.selectedIds.includes(f.properties._uid);
-                        let fColor = l ? l.color : color;
-                        if (l && l.symbology && l.symbology.field && l.symbology.map[f.properties[l.symbology.field]]) fColor = l.symbology.map[f.properties[l.symbology.field]];
-                        return L.circleMarker(latlng, { radius:6, fillColor: isSel ? '#ffc107' : fColor, color:'#333', weight:1, fillOpacity: l ? l.opacity : 0.8 });
-                    },
-                    onEachFeature: (f, l) => {
-                        l.on('click', e => handleMapClick(e, id, f, l));
-                        
-                        // MODIFIED: pm:edit handler to update GeoJSON features
-                        l.on('pm:edit', (e) => {
-                            const uid = f.properties._uid;
-                            const original = layers.find(x => x.id === id).geojson.features.find(feat => feat.properties._uid === uid);
-                            if(original) original.geometry = e.layer.toGeoJSON().geometry;
-                            // NOTE: Table is not refreshed on edit to avoid performance hit. User should re-render it manually.
-                        });
-                        
-                        const layerObj = layers.find(x => x.id === id);
-                        if (layerObj && layerObj.labels && layerObj.labels.active && layerObj.labels.field) {
-                             const txt = f.properties[layerObj.labels.field];
-                             if(txt) l.bindTooltip(String(txt), {permanent: true, direction: "center"});
-                        }
-                    }
-                });
-            };
-
-            const leafletL = createLeafletLayer(geojson);
-            leafletL.addTo(map);
-
-            layers.push({
-                id, name, geojson, leafletL, color, opacity: 0.4, selectedIds: [], createLayerFn: createLeafletLayer,
-                symbology: { field: null, map: {} }, labels: { field: null, active: false }
-            });
-            updateLayerList(); setActive(id);
-            try { map.fitBounds(leafletL.getBounds()); } catch(e){}
-        }
-
-        function createEmptyLayer() {
-            const name = prompt("Nombre de la nueva capa:", "Nueva Capa");
-            if(!name) return;
-            const empty = { type: "FeatureCollection", features: [] };
-            registerLayer(empty, name);
-        }
-
-        function setActive(id) {
-            activeId = id; updateLayerList(); renderTable();
-            const l = layers.find(x => x.id === id);
-            document.getElementById('active-layer-badge').innerHTML = `Capa: <b>${l ? l.name : 'Ninguna'}</b>`;
-            document.getElementById('filter-container').style.display = l ? 'block' : 'none';
-            if(l) filterActiveLayer(document.getElementById('layer-filter').value || '');
-            
-            // NEW: Disable edit/move on other layers, enable on active
-            layers.forEach(ly => { 
-                if(ly.id === id) {
-                    ly.leafletL.pm.enable({ allowSelfIntersection: false, markerStyle: { draggable: true } });
-                    ly.leafletL.pm.toggleLayerRotation(modes.moveRotate);
-                    ly.leafletL.pm.toggleLayerDrag(modes.moveRotate);
-                } else {
-                    ly.leafletL.pm.disable();
-                }
-            });
-            
-            updateSelectionUI();
-        }
-
-        function updateLayerList() {
-            const list = document.getElementById('layer-list');
-            document.getElementById('layer-count').innerText = layers.length;
-            list.innerHTML = '';
-            layers.forEach(l => {
-                const active = l.id === activeId ? 'active' : '';
-                const props = l.geojson.features.length > 0 ? Object.keys(l.geojson.features[0].properties).filter(k=>k!=='_uid') : [];
-                let fieldOpts = `<option value="">Seleccionar campo...</option>`;
-                props.forEach(p => fieldOpts += `<option value="${p}">${p}</option>`);
-
-                list.innerHTML += `
-                    <div class="layer-card ${active}">
-                        <div class="layer-header">
-                            <div class="layer-name" onclick="setActive('${l.id}')">${l.name}</div>
-                            <div class="layer-tools">
-                                <i class="fas fa-cog" onclick="toggleLayerSettings('${l.id}')" title="Ajustes"></i>
-                                <input type="color" value="${l.color}" onchange="changeColor('${l.id}',this.value)" style="width:20px;border:none;background:none;cursor:pointer">
-                                <i class="fas fa-eye" onclick="toggleVis('${l.id}', this)"></i>
-                                <i class="fas fa-trash" style="color:#e74c3c" onclick="delLayer('${l.id}')"></i>
-                            </div>
-                        </div>
-                        <div class="layer-slider"><input type="range" min="0" max="1" step="0.1" value="${l.opacity}" oninput="changeOpacity('${l.id}', this.value)"></div>
-                        <div id="settings-${l.id}" class="layer-settings">
-                            <div class="setting-row"><label>Categorizar:</label><select onchange="applySymbology('${l.id}', this.value)">${fieldOpts}</select></div>
-                            <div class="setting-row"><label>Etiquetas:</label><select onchange="setLabelField('${l.id}', this.value)">${fieldOpts}</select></div>
-                            <div class="setting-row" style="flex-direction:row;"><label>Activar:</label><input type="checkbox" ${l.labels.active?'checked':''} onchange="toggleLabels('${l.id}', this.checked)"></div>
-                        </div>
-                    </div>`;
-            });
-        }
-        function toggleLayerSettings(id) { document.getElementById(`settings-${id}`).classList.toggle('show'); }
-
-        function addNewField() {
-            if(!activeId) return alert("Selecciona una capa");
-            const name = prompt("Nombre del nuevo campo:");
-            if(!name) return;
-            const l = layers.find(x => x.id === activeId);
-            l.geojson.features.forEach(f => f.properties[name] = null);
-            renderTable();
-        }
-
-        function openCalculator() {
-            if(!activeId) return alert("Selecciona una capa");
-            const l = layers.find(x => x.id === activeId);
-            const props = l.geojson.features.length > 0 ? Object.keys(l.geojson.features[0].properties).filter(k=>k!=='_uid') : [];
-            if(props.length === 0) return alert("No hay campos para operar");
-            const target = prompt("Escribe el nombre del CAMPO DESTINO (existente o nuevo):");
-            if(!target) return;
-            const formula = prompt(`Escribe la fórmula.\nUsa los nombres de los campos exactos.\nEjemplos: "AREA * 100", "POBLACION / SUPERFICIE"\nCampos disponibles: ${props.join(', ')}`);
-            if(!formula) return;
-            loader(true);
-            setTimeout(() => {
-                let count = 0;
-                l.geojson.features.forEach(f => {
-                    try {
-                        let evalString = formula;
-                        props.forEach(p => {
-                            // IMPROVED: Handle string values in properties
-                            const val = f.properties[p] !== undefined ? f.properties[p] : 0;
-                            const reg = new RegExp(`\\b${p}\\b`, 'g');
-                            
-                            // Replace field name with its value (use quotes for strings)
-                            if(typeof val === 'string') {
-                                evalString = evalString.replace(reg, `'${val}'`);
-                            } else {
-                                evalString = evalString.replace(reg, val);
-                            }
-                        });
-                        // Use Function constructor for safer evaluation
-                        const result = new Function('return ' + evalString)();
-                        f.properties[target] = result;
-
-                        count++;
-                    } catch(e) { /* silent fail for features with error */ }
-                });
-                renderTable(); loader(false);
-                alert(`Cálculo finalizado en ${count} elementos.`);
-            }, 100);
-        }
-
-        // NEW/MODIFIED: Configurable Geoprocessing via Modal
-        function getFieldOptions(layerId) {
-            const l = layers.find(x => x.id === layerId);
-            if (!l || l.geojson.features.length === 0) return '';
-            const props = Object.keys(l.geojson.features[0].properties).filter(k => k !== '_uid');
-            let opts = '<option value="">(Seleccionar)</option>';
-            props.forEach(p => opts += `<option value="${p}">${p}</option>`);
-            return opts;
-        }
-
-        function openProcessModal(tool) {
-            if(!activeId) return alert("Se requiere una Capa Activa.");
-            toggleMenu('menu-gis'); // Close GIS menu
-            currentProcess.tool = tool;
-            currentProcess.options = {};
-            const modalTitle = document.getElementById('modal-title');
-            const modalForm = document.getElementById('modal-form');
-            let formHTML = '';
-
-            const activeLayerName = layers.find(x => x.id === activeId).name;
-            const otherLayers = layers.filter(x => x.id !== activeId);
-            const layerOptions = otherLayers.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-
-            switch (tool) {
-                case 'buffer':
-                    modalTitle.innerText = `Buffer: ${activeLayerName}`;
-                    const fieldOptionsBuffer = getFieldOptions(activeId);
-                    formHTML = `
-                        <div class="form-group">
-                            <label>Distancia (Km):</label>
-                            <input type="number" id="buffer-dist" placeholder="0.5" value="0.1" step="0.01">
-                            <small class="text-muted">Si se usa campo, se ignora esta distancia.</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Campo Variable de Distancia:</label>
-                            <select id="buffer-field">${fieldOptionsBuffer}</select>
-                        </div>
-                    `;
-                    break;
-                case 'union':
-                    modalTitle.innerText = `Disolver (Union): ${activeLayerName}`;
-                    const fieldOptionsUnion = getFieldOptions(activeId);
-                    formHTML = `
-                        <div class="form-group">
-                            <label>Campo para Agrupar (Disolver):</label>
-                            <select id="union-field">${fieldOptionsUnion}</select>
-                            <small class="text-muted">Vacío: disolverá todas las geometrías en una sola.</small>
-                        </div>
-                    `;
-                    break;
-                case 'intersect':
-                case 'difference':
-                    modalTitle.innerText = `${tool === 'intersect' ? 'Intersección' : 'Diferencia'} (2 Capas)`;
-                    if(otherLayers.length === 0) {
-                        modalForm.innerHTML = `<p style="color:#e74c3c;">Se requiere otra capa para esta operación.</p>`;
-                        document.querySelector('#process-modal .btn-block').style.display = 'none';
-                        document.getElementById('process-modal').style.display = 'flex';
-                        return;
-                    }
-                    formHTML = `
-                        <div class="form-group">
-                            <label>Capa de Entrada (A):</label>
-                            <input type="text" value="${activeLayerName}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Capa de Referencia (B):</label>
-                            <select id="target-layer-id">
-                                ${layerOptions}
-                            </select>
-                        </div>
-                        <p class="text-muted" style="font-size:0.8rem;">Operación: ${tool === 'intersect' ? 'A ∩ B' : 'A - B'}</p>
-                    `;
-                    break;
-                default:
-                    return;
-            }
-
-            modalForm.innerHTML = formHTML;
-            document.querySelector('#process-modal .btn-block').style.display = 'block'; // Ensure execute button is visible
-            document.getElementById('process-modal').style.display = 'flex';
-        }
-
-        function closeProcessModal() {
-            document.getElementById('process-modal').style.display = 'none';
-            currentProcess.tool = null;
-        }
-
-        async function executeProcess() {
-            const tool = currentProcess.tool;
-            const l = layers.find(x => x.id === activeId);
-            let src = l.geojson;
-            let suffix = "";
-            let options = {};
-            closeProcessModal(); // Close modal immediately
-
-            // Get source GeoJSON (Selection or Full)
-            if(l.selectedIds.length > 0) {
-                src = { type:"FeatureCollection", features: l.geojson.features.filter(f=>l.selectedIds.includes(f.properties._uid)) };
-                suffix="_Sel";
-            }
-
-            // Get options from modal inputs
-            switch (tool) {
-                case 'buffer':
-                    const dist = document.getElementById('buffer-dist').value;
-                    const field = document.getElementById('buffer-field').value;
-                    if (!dist && !field) { alert("Se requiere distancia o campo."); return; }
-
-                    if (field) {
-                        options = field; suffix += `_Var`;
-                    } else if (!isNaN(parseFloat(dist))) {
-                        options = parseFloat(dist); suffix += `_${options}km`;
-                    } else {
-                        alert("Distancia no válida."); return;
-                    }
-                    break;
-                case 'union':
-                    const unionField = document.getElementById('union-field').value;
-                    if(unionField) {
-                        options = { propertyName: unionField };
-                        suffix += `_${unionField}`;
-                    } else {
-                        // Dissolve all (no options needed for turf.dissolve)
-                        suffix += "_All";
-                    }
-                    break;
-                case 'intersect':
-                case 'difference':
-                    const targetLayerId = document.getElementById('target-layer-id').value;
-                    if(!targetLayerId) { alert("Selecciona la capa de referencia."); return; }
-                    currentProcess.options.targetId = targetLayerId;
-                    const o = layers.find(x => x.id === targetLayerId);
-                    if (!o) { alert("Capa de referencia no encontrada."); return; }
-                    // Store the target layer GeoJSON in options
-                    options = { targetGeoJSON: o.geojson };
-                    suffix += `_${o.name}`;
-                    break;
-            }
-
-            loader(true);
-
-            setTimeout(() => {
-                try {
-                    let res = null;
-                    if (tool === 'buffer') {
-                        if (typeof options === 'number') {
-                            res = turf.buffer(src, options, { units: 'kilometers' });
-                        } else {
-                            const buffed = src.features.map(f => {
-                                const distVal = parseFloat(f.properties[options]);
-                                if (isNaN(distVal) || distVal <= 0) return null;
-                                return turf.buffer(f, distVal, { units: 'kilometers' });
-                            }).filter(f => f !== null);
-                            res = turf.featureCollection(buffed);
-                        }
-                    } else if (tool === 'union') {
-                        res = turf.dissolve(src, options);
-                    } else if (tool === 'intersect') {
-                        // Perform the intersection between the active layer and the target layer
-                        // NOTE: Intersect in turf only works between two single features or two feature collections.
-                        // To intersect two collections, we need an approach like a spatial join or iterating features.
-                        // For simplicity, we'll use a basic approach that works for single features or small collections.
-                        const targetGeoJSON = options.targetGeoJSON;
-                        const intersections = [];
-                        src.features.forEach(fA => {
-                            targetGeoJSON.features.forEach(fB => {
-                                const intersection = turf.intersect(fA, fB);
-                                if (intersection) {
-                                    // Combine properties from both features
-                                    intersection.properties = { ...fA.properties, ...fB.properties };
-                                    intersections.push(intersection);
-                                }
-                            });
-                        });
-                        res = turf.featureCollection(intersections);
-                        if (res.features.length === 0) throw "No se encontraron intersecciones.";
-
-                    } else if (tool === 'difference') {
-                        const targetGeoJSON = options.targetGeoJSON;
-                        const differences = [];
-                        src.features.forEach(fA => {
-                            let currentFeature = fA;
-                            targetGeoJSON.features.forEach(fB => {
-                                const diff = turf.difference(currentFeature, fB);
-                                if (diff) {
-                                    currentFeature = diff;
-                                } else {
-                                    // If difference is null, means B fully contains A, so A is removed
-                                    currentFeature = null;
-                                    return;
-                                }
-                            });
-                            if (currentFeature) {
-                                // Preserve properties of the original feature A
-                                currentFeature.properties = fA.properties;
-                                differences.push(currentFeature);
-                            }
-                        });
-                        res = turf.featureCollection(differences);
-                        if (res.features.length === 0) throw "La diferencia resultó en un conjunto vacío.";
-                    }
-
-                    if (res) registerLayer(res, l.name + "_" + tool + suffix);
-                    else alert("Sin resultado");
-                } catch (e) {
-                    alert("Error durante el geoproceso: " + e);
-                }
-                loader(false);
-            }, 50);
-        }
-
-        async function runGIS(tool) {
-            if(!activeId) return alert("Capa activa requerida");
-            const l = layers.find(x=>x.id===activeId);
-            let src = l.geojson;
-            let suffix = "";
-            if(l.selectedIds.length>0) {
-                src = { type:"FeatureCollection", features: l.geojson.features.filter(f=>l.selectedIds.includes(f.properties._uid)) };
-                suffix="_Sel";
-            }
-            if(!src.features.length) return alert("No hay geometrías para procesar (vacío o selección vacía)");
-
-            let options = {}; // options are now mostly handled in executeProcess for the configurable tools
-
-            loader(true); toggleMenu('menu-gis');
-            setTimeout(()=>{
-                try {
-                    let res=null;
-                    // Simplified tools (non-configurable)
-                    if(tool==='centroid') { res=turf.featureCollection(src.features.map(f=>turf.centroid(f))); suffix+="_Cent"; }
-                    else if(tool==='centerofmass') { res=turf.featureCollection(src.features.map(f=>turf.centerOfMass(f))); suffix+="_CM"; } // NEW TOOL
-                    else if(tool==='hull') { res=turf.convex(src); suffix+="_Hull"; }
-                    else if(tool==='tin') {
-                        const pts=[]; turf.flatten(src).features.forEach(f=>pts.push(turf.centroid(f)));
-                        // NOTE: tin requires at least 3 points
-                        if(pts.length < 3) throw "TIN requiere al menos 3 puntos.";
-                        res=turf.tin(turf.featureCollection(pts)); suffix+="_Tin";
-                    }
-                    else if(tool==='kmeans') {
-                        const pts=[]; turf.flatten(src).features.forEach(f=>pts.push(turf.centroid(f)));
-                        if(pts.length < 5) throw "K-Means requiere al menos 5 puntos.";
-                        res = turf.clustersKmeans(turf.featureCollection(pts), {numberOfClusters: 5}); suffix+="_Kmeans";
-                    }
-                    else if(tool==='voronoi') {
-                        const pts=[]; turf.flatten(src).features.forEach(f=>pts.push(turf.centroid(f)));
-                        if(pts.length < 1) throw "Voronoi requiere al menos 1 punto.";
-                        res = turf.voronoi(turf.featureCollection(pts), {bbox: turf.bbox(src)}); suffix+="_Vor";
-                    }
-                    // The configurable tools (buffer, union, intersect, difference) are now handled by openProcessModal/executeProcess
-
-                    if(res) registerLayer(res, l.name+suffix); else alert("Sin resultado");
-                } catch(e){ alert("Error: "+e); }
-                loader(false);
-            },50);
-        }
-
-        function applySymbology(id, field) {
-            const l = layers.find(x => x.id === id);
-            if (!field) { l.symbology.field = null; l.symbology.map = {}; }
-            else {
-                l.symbology.field = field;
-                const uniqueVals = [...new Set(l.geojson.features.map(f => f.properties[field]))];
-                l.symbology.map = {}; // Clear old map
-                uniqueVals.forEach(val => l.symbology.map[val] = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'));
-            }
-            // MODIFIED: Use refreshLayerFeatures to redraw layer with new symbology
-            refreshLayerFeatures(l);
-        }
-
-        function toggleMoveRotate() {
-            if(!activeId) return alert("Selecciona la capa a Mover/Rotar");
-            const l = layers.find(x=>x.id===activeId);
-            modes.moveRotate = !modes.moveRotate;
-            l.leafletL.pm.toggleLayerRotation(modes.moveRotate);
-            l.leafletL.pm.toggleLayerDrag(modes.moveRotate);
-            document.querySelector('.tool-trigger[onclick*="menu-utils"]').classList.toggle('active-state', modes.select || modes.moveRotate);
-
-            if(!modes.moveRotate) {
-                // When disabling, update the source GeoJSON
-                l.leafletL.eachLayer(layer => {
-                    if (layer.feature && layer.feature.properties._uid) {
-                        const uid = layer.feature.properties._uid;
-                        const original = l.geojson.features.find(feat => feat.properties._uid === uid);
-                        if(original) original.geometry = layer.toGeoJSON().geometry;
-                    }
-                });
-            }
-            toggleMenu('menu-utils');
-            alert(modes.moveRotate?"Modo Mover/Rotar ON":"Modo Mover/Rotar OFF. Geometrías actualizadas.");
-        }
-
-        function setLabelField(id, field) { const l=layers.find(x=>x.id===id); l.labels.field=field; if(l.labels.active) refreshLabels(l); }
-        function toggleLabels(id, active) { const l=layers.find(x=>x.id===id); l.labels.active=active; refreshLabels(l); }
-        function refreshLabels(l) {
-            l.leafletL.eachLayer(layer => {
-                layer.unbindTooltip();
-                if(l.labels.active && l.labels.field) {
-                    const txt = layer.feature.properties[l.labels.field];
-                    if(txt) layer.bindTooltip(String(txt), {permanent: true, direction: "center"});
-                }
-            });
-        }
-        function filterActiveLayer(text) {
-            if(!activeId) return; const l=layers.find(x=>x.id===activeId); const term=text.toLowerCase();
-            const filtered=l.geojson.features.filter(f=>{ if(!term)return true; for(const k in f.properties)if(k!=='_uid'&&String(f.properties[k]).toLowerCase().includes(term))return true; return false;});
-            // MODIFIED: Use existing feature data to redraw
-            l.leafletL.clearLayers(); l.leafletL.addData({type:"FeatureCollection", features: filtered});
-        }
-        function handleMapClick(e, layerId, feature, leafletLayer) {
-            if(modes.identify) { L.DomEvent.stopPropagation(e); let h="<b>Info:</b><br>"; for(let k in feature.properties)if(k!=='_uid')h+=`<b>${k}:</b> ${feature.properties[k]}<br>`; leafletLayer.bindPopup(h).openPopup(); }
-            else if(modes.select) {
-                L.DomEvent.stopPropagation(e); if(layerId!==activeId) return alert("Selecciona en capa activa");
-                const l=layers.find(x=>x.id===layerId); const uid=feature.properties._uid;
-                if(l.selectedIds.includes(uid)) l.selectedIds=l.selectedIds.filter(x=>x!==uid); else l.selectedIds.push(uid);
-                // MODIFIED: Use setStyle to update style only, which is faster than iterating all layers for color
-                l.leafletL.eachLayer(ly=>{
-                    if(ly.feature.properties._uid===uid) {
-                        const isSel=l.selectedIds.includes(uid);
-                        let c=l.color;
-                        if(l.symbology.field && l.symbology.map[ly.feature.properties[l.symbology.field]]) c=l.symbology.map[ly.feature.properties[l.symbology.field]];
-
-                        ly.setStyle({
-                            color:isSel?'#ffc107':c,
-                            fillColor:isSel?'#ffc107':c,
-                            weight: isSel?3:2
-                        });
-                        if (ly instanceof L.CircleMarker) { // Handle point color for circle markers
-                             ly.setStyle({
-                                fillColor:isSel?'#ffc107':c,
-                            });
-                        }
-                    }
-                });
-                updateSelectionUI();
-            }
-        }
-        function updateSelectionUI() { const l=layers.find(x=>x.id===activeId); const b=document.getElementById('selection-badge'); if(l&&l.selectedIds.length>0){b.style.display='block';b.innerText=`Sel: ${l.selectedIds.length}`;}else b.style.display='none'; }
-        function toggleSelectMode() { modes.select=!modes.select; modes.identify=false; document.querySelector('.tool-trigger[onclick*="menu-utils"]').classList.toggle('active-state', modes.select || modes.moveRotate); map.getContainer().style.cursor=modes.select?'crosshair':''; toggleMenu('menu-utils'); }
-        function toggleIdentify() { modes.identify=!modes.identify; modes.select=false; toggleMenu('menu-utils'); alert(modes.identify?"Modo Info ON":"Modo Info OFF"); }
-        function changeColor(id, c) { const l=layers.find(x=>x.id===id); l.color=c; applySymbology(id, l.symbology.field); }
-        function changeOpacity(id, o) { const l=layers.find(x=>x.id===id); l.opacity=parseFloat(o); l.leafletL.invoke('setStyle', {fillOpacity: l.opacity}); }
-        function toggleVis(id, icon) { const l=layers.find(x=>x.id===id); if(map.hasLayer(l.leafletL)){map.removeLayer(l.leafletL);icon.className="fas fa-eye-slash";}else{map.addLayer(l.leafletL);icon.className="fas fa-eye";} }
-        function delLayer(id) { if(!confirm("¿Borrar?"))return; const l=layers.find(x=>x.id===id); map.removeLayer(l.leafletL); layers=layers.filter(x=>x.id!==id); if(activeId===id)setActive(layers[0]?layers[0].id:null);else updateLayerList(); }
-        function saveActiveLayer() {
-            if(!activeId)return alert("Sin capa"); const l=layers.find(x=>x.id===activeId); let d=l.geojson;
-            if(l.selectedIds.length>0 && confirm("¿Guardar SOLO selección?")) d={type:"FeatureCollection",features:l.geojson.features.filter(f=>l.selectedIds.includes(f.properties._uid))};
-            const s=JSON.stringify(d); const a=document.createElement('a'); a.href="data:text/json;charset=utf-8,"+encodeURIComponent(s); a.download=l.name+".geojson"; document.body.appendChild(a); a.click(); a.remove();
-        }
-        function calcMetrics(t) {
-            if(!activeId)return; const l=layers.find(x=>x.id===activeId); const tg=l.selectedIds.length>0?l.geojson.features.filter(f=>l.selectedIds.includes(f.properties._uid)):l.geojson.features;
-            if(!tg.length)return alert("Nada que medir"); loader(true);
-            setTimeout(()=>{
-                let tot=0; tg.forEach(f=>{ try{ if(t==='area'){const a=turf.area(f);f.properties['AREA_M2']=a.toFixed(2);f.properties['AREA_HA']=(a/10000).toFixed(4);tot+=a;}else{const n=turf.length(f,{units:'kilometers'});f.properties['LEN_KM']=n.toFixed(3);tot+=n;} }catch(e){} });
-                renderTable(); loader(false); alert(`Total: ${t==='area'?(tot/10000).toFixed(4)+' ha':tot.toFixed(3)+' km'}`); toggleMenu('menu-gis');
-            },50);
-        }
-        async function runAdvanced(t) {
-            if(!activeId)return; const l=layers.find(x=>x.id===activeId); toggleMenu('menu-edit');
-            if(t==='clean'){l.selectedIds=[];refreshLayerFeatures(l);updateSelectionUI();} // MODIFIED: Refresh layer to remove selection style
-            else if(t==='explode'){loader(true);setTimeout(()=>{registerLayer(turf.flatten(l.geojson),l.name+"_Exp");loader(false);},50);}
-            else if(t==='merge'){
-                if(l.selectedIds.length<2)return alert("Selecciona 2 o más geometrías para unir."); loader(true); setTimeout(()=>{
-                    const s=l.geojson.features.filter(f=>l.selectedIds.includes(f.properties._uid));
-                    const remaining = l.geojson.features.filter(f=>!l.selectedIds.includes(f.properties._uid));
-
-                    // Use the first selected feature as the base for the union and properties
-                    let mergedFeature = s[0];
-                    for(let i=1;i<s.length;i++) mergedFeature=turf.union(mergedFeature,s[i]);
-
-                    // Assign properties of the first feature to the merged one
-                    // NOTE: This logic assumes property retention of the *first* feature.
-                    mergedFeature.properties = s[0].properties;
-                    mergedFeature.properties._uid = activeId + '_' + Date.now(); // New UID for the merged feature
-
-                    l.geojson.features=remaining;
-                    l.geojson.features.push(mergedFeature);
-                    l.selectedIds = []; // Clear selection after merge
-
-                    refreshLayerFeatures(l); // Refresh the map layer
-                    updateSelectionUI();
-                    loader(false);
-                },50);
-            }
-        }
-        function renderTable() {
-            const b=document.querySelector('#attr-table tbody'); b.innerHTML=''; const h=document.querySelector('#attr-table thead'); h.innerHTML='';
-            if(!activeId)return; const l=layers.find(x=>x.id===activeId); const fs=l.geojson.features; if(!fs.length)return;
-            const p=Object.keys(fs[0].properties).filter(k=>k!=='_uid');
-            let hr='<tr>'; p.forEach(k=>hr+=`<th>${k}</th>`); hr+='</tr>'; h.innerHTML=hr;
-            const lim=Math.min(fs.length,500); // Increased limit for better usability, keeping performance in mind
-            for(let i=0;i<lim;i++){
-                let tr=document.createElement('tr');
-                const feature = fs[i]; // Store feature reference
-                // Click on row zooms to feature
-                tr.onclick=()=>{
-                    const layer = l.leafletL.getLayers().find(ly => ly.feature.properties._uid === feature.properties._uid);
-                    if(layer) map.fitBounds(layer.getBounds(),{maxZoom:20});
-                };
-                p.forEach(k=>{let td=document.createElement('td');td.contentEditable=true;td.innerText=feature.properties[k]||'';td.onblur=()=>{feature.properties[k]=td.innerText;};tr.appendChild(td);});
-                b.appendChild(tr);
-            }
-        }
-        async function fetchOSM(t) {
-            const b=map.getBounds(); if(map.distance(b.getSouthWest(),b.getNorthEast())>15000)return alert("Área muy grande para consulta OSM"); loader(true);
-            const q=t==='building'?`[out:json];(way["building"](${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}););out geom;`:`[out:json];(way["highway"](${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}););out geom;`;
-            try{const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q});const d=await r.json();const g=osmtogeojson(d);if(g.features.length)registerLayer(g,`OSM ${t}`);else alert("Sin datos");}catch(e){alert("Error OSM");}loader(false);
-        }
-        document.getElementById('fileInput').addEventListener('change', async e=>{
-            const f=e.target.files[0]; if(!f)return; loader(true);
-            try{
-                const n=f.name;const x=await f.arrayBuffer();
-                if(n.endsWith('zip')){const d=await shp(x);Array.isArray(d)?d.forEach(l=>registerLayer(l,l.fileName)):registerLayer(d,n);}
-                else{const t=new TextDecoder().decode(x);if(n.includes('json')||n.endsWith('geojson'))registerLayer(JSON.parse(t),n);else if(n.endsWith('kml'))registerLayer(omnivore.kml.parse(t).toGeoJSON(),n);else if(n.endsWith('gpx'))registerLayer(omnivore.gpx.parse(t).toGeoJSON(),n);}
-            }catch(e){alert("Error archivo");}loader(false);e.target.value='';
-        });
-        function locateUser(){map.locate({setView:true,maxZoom:18});map.once('locationfound',e=>L.marker(e.latlng).addTo(map).bindPopup("Tú").openPopup());}
-    </script>
+    <script defer src="js/core/state.js"></script>
+    <script defer src="js/core/storage.js"></script>
+    <script defer src="js/core/pwa.js"></script>
+    <script defer src="js/modules/project.js"></script>
+    <script defer src="js/modules/map.js"></script>
+    <script defer src="js/modules/tools.js"></script>
+    <script defer src="js/modules/gis.js"></script>
+    <script defer src="js/modules/editing.js"></script>
+    <script defer src="js/modules/digitizing.js"></script>
+    <script defer src="js/modules/capture.js"></script>
+    <script defer src="js/modules/layers.js"></script>
+    <script defer src="js/modules/table.js"></script>
+    <script defer src="js/app.js"></script>
+    <script defer src="js/smoke.js"></script>
 </body>
 </html>
+
+
+
+
+
