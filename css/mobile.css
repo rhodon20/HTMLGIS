@@ -16,10 +16,11 @@
   .mobile-panel-head { position: relative; display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; min-height: 54px; padding: 0 12px 0 18px; border-bottom: 1px solid var(--border); }
   .mobile-panel-head::before { content: ''; position: absolute; top: 7px; left: 50%; width: 38px; height: 4px; transform: translateX(-50%); border-radius: 9px; background: var(--border); }
   .mobile-close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--text-main); font-size: 1.1rem; }
-  #floating-tools { position: static; display: block; }
+  /* Keep tool sheets in a stacking context above the blurred scrim. */
+  #floating-tools { position: fixed; inset: 0; z-index: 1500; display: block; pointer-events: none; }
   .tool-group { display: contents; }
   .tool-trigger { display: none; }
-  .tool-menu { display: flex; visibility: hidden; height: min(76dvh, 680px); padding: 18px 12px calc(18px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; opacity: 1; }
+  .tool-menu { display: flex; visibility: hidden; height: min(76dvh, 680px); padding: 18px 12px calc(18px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; opacity: 1; pointer-events: auto; }
   .tool-menu.show { visibility: visible; transform: translateY(0); }
   .tool-menu::before { content: ''; flex: 0 0 4px; width: 38px; margin: -10px auto 10px; border-radius: 9px; background: var(--border); }
   .menu-head { padding: 12px 14px 8px; font-size: .78rem; }
