@@ -1,6 +1,12 @@
 (function () {
   window.HTMLGISModules = window.HTMLGISModules || {};
 
+  function escapeHTML(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function renderLayerList(ctx) {
     const list = document.getElementById('layer-list');
     const layers = ctx.getLayers();
@@ -16,7 +22,7 @@
     });
 
     grouped.forEach((groupLayers, groupName) => {
-      list.innerHTML += `<div class="sec-title" style="margin-top:8px;">Grupo: ${groupName} (${groupLayers.length})</div>`;
+      list.innerHTML += `<div class="sec-title" style="margin-top:8px;">Grupo: ${escapeHTML(groupName)} (${groupLayers.length})</div>`;
       groupLayers.forEach((l) => {
       const active = l.id === activeId ? 'active' : '';
       const props = l.geojson.features.length > 0
@@ -24,7 +30,7 @@
         : [];
 
       let fieldOpts = '<option value="">Seleccionar campo...</option>';
-      props.forEach((p) => { fieldOpts += `<option value="${p}">${p}</option>`; });
+      props.forEach((p) => { fieldOpts += `<option value="${escapeHTML(p)}">${escapeHTML(p)}</option>`; });
       const crs = String(l.crs || 'EPSG:4326').toUpperCase();
       const crsOptions = ['EPSG:4326', 'EPSG:3857', 'EPSG:25830', 'EPSG:23030'];
       let crsOpts = '';
@@ -34,7 +40,7 @@
       list.innerHTML += `
         <div class="layer-card ${active}">
           <div class="layer-header">
-            <div class="layer-name" data-action="layer-set-active" data-layer-id="${l.id}">${l.name}</div>
+            <div class="layer-name" data-action="layer-set-active" data-layer-id="${escapeHTML(l.id)}">${escapeHTML(l.name)}</div>
             <div class="layer-tools">
               <i class="fas fa-arrow-up" data-action="layer-move-up" data-layer-id="${l.id}" title="Subir"></i>
               <i class="fas fa-arrow-down" data-action="layer-move-down" data-layer-id="${l.id}" title="Bajar"></i>
@@ -49,7 +55,7 @@
           <div id="settings-${l.id}" class="layer-settings">
             <div class="setting-row"><label>Categorizar:</label><select data-action="layer-apply-symbology" data-layer-id="${l.id}">${fieldOpts}</select></div>
             <div class="setting-row"><label>Etiquetas:</label><select data-action="layer-set-label-field" data-layer-id="${l.id}">${fieldOpts}</select></div>
-            <div class="setting-row"><label>Grupo:</label><input type="text" value="${(l.group || 'General')}" data-action="layer-set-group" data-layer-id="${l.id}"></div>
+            <div class="setting-row"><label>Grupo:</label><input type="text" value="${escapeHTML(l.group || 'General')}" data-action="layer-set-group" data-layer-id="${escapeHTML(l.id)}"></div>
             <div class="setting-row"><label>CRS:</label><select data-action="layer-set-crs" data-layer-id="${l.id}">${crsOpts}</select></div>
             <div class="setting-row"><button class="btn-mini" data-action="layer-reproject" data-layer-id="${l.id}">Reproyectar (a EPSG:4326)</button></div>
             <div class="setting-row"><button class="btn-mini" data-action="layer-edit-template" data-layer-id="${l.id}">Plantilla captura</button></div>
