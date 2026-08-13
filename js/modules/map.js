@@ -8,7 +8,7 @@
     const bases = {
       OpenStreetMap: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22 }),
       'Carto Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 22 }),
-      'PNOA Sat': L.tileLayer.wms('http://www.ign.es/wms-inspire/pnoa-ma?', { layers: 'OI.OrthoimageCoverage', format: 'image/png', transparent: true }),
+      'PNOA Sat': L.tileLayer.wms('https://www.ign.es/wms-inspire/pnoa-ma?', { layers: 'OI.OrthoimageCoverage', format: 'image/png', transparent: true }),
       'Esri Sat': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
     };
 

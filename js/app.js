@@ -11,7 +11,7 @@
             L.control.scale({ imperial: false }).addTo(map);
             bases.OpenStreetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22 });
             bases['Carto Dark'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 22 });
-            bases['PNOA Sat'] = L.tileLayer.wms('http://www.ign.es/wms-inspire/pnoa-ma?', { layers: 'OI.OrthoimageCoverage', format: 'image/png', transparent: true });
+            bases['PNOA Sat'] = L.tileLayer.wms('https://www.ign.es/wms-inspire/pnoa-ma?', { layers: 'OI.OrthoimageCoverage', format: 'image/png', transparent: true });
             bases['Esri Sat'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
             bases.OpenStreetMap.addTo(map);
             L.control.layers(bases, null, { position: 'topright' }).addTo(map);
@@ -144,6 +144,7 @@
                        // Check current width for mobile behavior
             if (window.innerWidth < 768) {
                 sb.classList.toggle('open');
+                document.body.classList.toggle('mobile-panel-open', sb.classList.contains('open'));
             } else {
                 // Desktop behavior: toggle class on body to shift layout
                 body.classList.toggle('sidebar-open');
@@ -154,13 +155,33 @@
         function toggleMenu(id) {
              document.querySelectorAll('.tool-menu').forEach(el=>el.id!==id?el.classList.remove('show'):null);
             document.getElementById(id).classList.toggle('show');
+            if (window.innerWidth < 768) document.body.classList.toggle('mobile-panel-open', document.getElementById(id).classList.contains('show'));
             setTimeout(ensureHudLayout, 0);
+        }
+        function closeMobilePanels() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.querySelectorAll('.tool-menu').forEach((el) => el.classList.remove('show'));
+            document.getElementById('table-panel').classList.remove('open');
+            document.body.classList.remove('mobile-panel-open');
+            document.querySelectorAll('#mobile-nav button').forEach((el) => el.classList.remove('active'));
+            document.getElementById('table-icon').className = 'fas fa-chevron-up';
+        }
+        function openMobilePanel(target, trigger) {
+            if (window.innerWidth >= 768) return;
+            closeMobilePanels();
+            if (target === 'sidebar') document.getElementById('sidebar').classList.add('open');
+            else document.getElementById(target).classList.add('show');
+            document.body.classList.add('mobile-panel-open');
+            if (trigger) trigger.classList.add('active');
+            setTimeout(() => map.invalidateSize(), 260);
         }
         function rectsOverlap(a, b) {
             if (!a || !b) return false;
             return !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
         }
         function ensureHudLayout() {
+            // Mobile tools are intentional bottom sheets and may overlap the HUD.
+            if (window.innerWidth < 768) return;
             const panel = document.getElementById('menu-digitize');
             const tools = document.getElementById('floating-tools');
             const badges = document.getElementById('status-badges');
@@ -182,6 +203,12 @@
         }
         function toggleTable() {
              const p=document.getElementById('table-panel'); p.classList.toggle('open');
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.querySelectorAll('.tool-menu').forEach((el) => el.classList.remove('show'));
+                document.body.classList.toggle('mobile-panel-open', p.classList.contains('open'));
+                document.querySelectorAll('#mobile-nav button').forEach((el) => el.classList.remove('active'));
+            }
             document.getElementById('table-icon').className = p.classList.contains('open') ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
             setTimeout(ensureHudLayout, 0);
         }
@@ -2049,6 +2076,8 @@
             switch (action) {
                 case 'toggle-dark-mode': return toggleDarkMode();
                 case 'toggle-sidebar': return toggleSidebar();
+                case 'close-mobile-panels': return closeMobilePanels();
+                case 'mobile-open-panel': return openMobilePanel(el.dataset.mobileTarget, el);
                 case 'open-file-input': return document.getElementById('fileInput').click();
                 case 'project-set-crs': return setProjectCrs(el.value);
                 case 'project-toggle-multi-crs': return setMultiCrsEditing(!!el.checked);

@@ -1,6 +1,12 @@
 (function () {
   window.HTMLGISModules = window.HTMLGISModules || {};
 
+  function escapeHTML(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   const tableState = {
     byLayer: {}
   };
@@ -56,7 +62,7 @@
       ? Object.keys(layer.geojson.features[0].properties).filter((k) => k !== '_uid')
       : [];
     const cur = fieldSel.value;
-    fieldSel.innerHTML = '<option value="">Campo...</option>' + props.map((p) => `<option value="${p}">${p}</option>`).join('');
+    fieldSel.innerHTML = '<option value="">Campo...</option>' + props.map((p) => `<option value="${escapeHTML(p)}">${escapeHTML(p)}</option>`).join('');
     fieldSel.value = (state.filter && state.filter.field && props.includes(state.filter.field)) ? state.filter.field : (cur && props.includes(cur) ? cur : '');
     opSel.value = (state.filter && state.filter.op) ? state.filter.op : 'contains';
     valInput.value = state.filter && state.filter.value != null ? String(state.filter.value) : '';
@@ -157,4 +163,3 @@
     clearTableFilter
   };
 })();
-
