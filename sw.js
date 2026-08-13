@@ -1,10 +1,11 @@
-const CACHE_NAME = 'htmlgis-cache-v1';
+const CACHE_NAME = 'htmlgis-cache-v2';
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './ROADMAP.md',
   './icons/icon.svg',
+  './css/mobile.css',
   './js/core/state.js',
   './js/core/storage.js',
   './js/core/pwa.js',
