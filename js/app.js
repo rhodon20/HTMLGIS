@@ -180,6 +180,8 @@
             return !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
         }
         function ensureHudLayout() {
+            // Mobile tools are intentional bottom sheets and may overlap the HUD.
+            if (window.innerWidth < 768) return;
             const panel = document.getElementById('menu-digitize');
             const tools = document.getElementById('floating-tools');
             const badges = document.getElementById('status-badges');
