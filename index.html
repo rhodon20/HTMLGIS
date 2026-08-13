@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.0/dist/leaflet-geoman.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/mobile.css">
 
     <style>
         /* VARIABLES & THEME */
@@ -174,6 +173,8 @@
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; }
     </style>
+    <!-- Mobile overrides must load after the legacy inline stylesheet. -->
+    <link rel="stylesheet" href="css/mobile.css?v=3">
 </head>
 <body>
     <div id="loader"><i class="fas fa-microchip fa-spin fa-3x" style="margin-bottom:15px"></i><span>Procesando...</span></div>
